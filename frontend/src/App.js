@@ -10,7 +10,6 @@ const path="/";
 function App() {
 
   const [render,setRender]=useState(false);
-  // const [userData,setUserData]=useState({});
 
   useEffect(() => {
     const queryString=window.location.search;
@@ -37,19 +36,6 @@ function App() {
 
   },[])
 
-  // async function getUserData(){
-  //   await fetch(`http://localhost:3005/api/v1/getUserDetails`,{
-  //     method:"GET",
-  //     headers:{
-  //       "Authorization":"Bearer "+localStorage.getItem('access_token')
-  //     }
-  // }).then((response)=>{
-  //   return response.json();
-  // }).then((data)=>{
-  //   console.log(data);
-  //   setUserData(data);
-  // })
-  // }
 
 
   function loginWithGithub(){
