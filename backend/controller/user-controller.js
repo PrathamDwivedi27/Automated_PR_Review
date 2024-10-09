@@ -49,32 +49,3 @@ export const getAccessToken=async (req,res)=>{
     }
 }
 
-
-// to get the user details
-// access token is passed as authorization header
-
-// export const getUserDetails=async (req,res)=>{
-//     try {
-//         req.get("Authorization");  //bearer access token
-//         const response=await fetch("https://api.github.com/user",{
-//             method:"GET",
-//             headers:{
-//                 "Authorization":req.get("Authorization")
-//             }
-//         })
-        
-//         const data=await response.json();
-
-//           return res.status(200).json({
-//               message:"User details fetched",
-//               data:data,
-//             })
-//     } catch (error) {
-//         console.log(error);
-//         return res.status(500).json({
-//             message:"Not able to get the user details",
-//             err:error.message,
-//             data:{}
-//         })
-//     }
-// };

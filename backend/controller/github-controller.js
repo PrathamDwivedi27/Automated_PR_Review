@@ -1,4 +1,7 @@
 import fetch from "node-fetch";
+import { fetchDiff,fetchPatch } from "../utils/helper.js";
+import { GEMINI_API_KEY } from "../config/server-config.js";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Function to create GitHub webhook
 export const createWebhook = async (req, res) => {
@@ -49,27 +52,56 @@ export const createWebhook = async (req, res) => {
 };
 
 export const handleWebhook = async (req, res) => {
-  try {
-    // console.log("Webhook received:", req.body);
+    try {
+      const eventType = req.headers["x-github-event"];
+      if (eventType === "pull_request") {
+        const pullRequestData = req.body;
+        console.log("Pull Request Data:", pullRequestData);
+  
+        if (["opened", "synchronize", "reopened"].includes(pullRequestData.action)) {
+          const { diff_url, patch_url } = pullRequestData.pull_request;
+  
+          // Fetch diff and patch data using utility functions
+          const [diffText, patchText] = await Promise.all([
+            fetchDiff(diff_url),
+            fetchPatch(patch_url),
+          ]);
 
-    // Check the event type
-    const eventType = req.headers["x-github-event"];
-    if (eventType === "pull_request") {
-      const pullRequestData = req.body;
-      console.log("Pull Request Data:", pullRequestData);
-
-      return res.status(200).json({
-        message: "Get the pr data",
-        data: pullRequestData,
-        err: {},
+          console.log("Diff Text:", diffText);
+          console.log("Patch Text:", patchText);
+  
+          // Call the AI model to review the changes
+          const aiReview = await reviewWithAI(diffText, patchText);
+          console.log("AI Review:", aiReview);
+  
+          // Respond with the AI review
+          return res.status(200).json({
+            message: "Pull request reviewed successfully",
+            aiReview,
+          });
+        }
+        return res.status(200).json({ message: "Event not handled" });
+      }
+    } catch (error) {
+      console.log("Error handling webhook:", error);
+      return res.status(500).json({
+        message: "Not able to get the PR data",
+        error: error.message,
       });
     }
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({
-      message: "Not able to get the pr data",
-      err: error.message,
-      data: {},
-    });
-  }
-};
+  };
+
+
+export async function reviewWithAI(diffText, patchText) {
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+  
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const result = await model.generateContent([`Review the following pull request diff and patch:\n\nDiff:\n${diffText}\n\nPatch:\n${patchText}\n\nProvide feedback, potential improvements, and issues.`]);
+    
+    return result.response.text();
+  };
+
+
+
+
+

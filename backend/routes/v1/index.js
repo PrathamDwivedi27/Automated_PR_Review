@@ -8,7 +8,6 @@ import { handleWebhook } from "../../controller/github-controller.js";
 const router=express.Router();
 
 router.get('/getAccessToken',getAccessToken);
-// router.get('/getUserDetails',getUserDetails);
 
 router.post('/createWebhook', createWebhook);
 router.post('/getdata', handleWebhook);
