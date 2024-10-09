@@ -3,7 +3,7 @@ const fetch=(...args)=>import('node-fetch').then(({default: fetch})=>fetch(...ar
 
 
 
-//code being passed from frontend
+//code being passed from frontend and access token be provided from backend
 export const getAccessToken=async (req,res)=>{
     try {
         console.log(req.query.code);
@@ -50,7 +50,7 @@ export const getAccessToken=async (req,res)=>{
 }
 
 
-//to get the user details
+// to get the user details
 // access token is passed as authorization header
 
 // export const getUserDetails=async (req,res)=>{
