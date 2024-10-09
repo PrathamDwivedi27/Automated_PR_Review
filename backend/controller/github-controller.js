@@ -2,19 +2,22 @@ import fetch from "node-fetch";
 import { fetchDiff,fetchPatch } from "../utils/helper.js";
 import { GEMINI_API_KEY } from "../config/server-config.js";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { ACCESS_TOKEN_SECRET } from "../config/server-config.js";
+
+
 
 // Function to create GitHub webhook
 export const createWebhook = async (req, res) => {
   try {
     // Destructure owner, repo, and access token from the request body
-    const { owner, repo, accessToken } = req.body;
+    const { owner, repo} = req.body;
 
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/hooks`,
       {
         method: "POST",
         headers: {
-          Authorization: `token ${accessToken}`, // Use OAuth access token here
+          Authorization: `token ${ACCESS_TOKEN_SECRET}`, // Use OAuth access token here
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
@@ -59,7 +62,8 @@ export const handleWebhook = async (req, res) => {
         console.log("Pull Request Data:", pullRequestData);
   
         if (["opened", "synchronize", "reopened"].includes(pullRequestData.action)) {
-          const { diff_url, patch_url } = pullRequestData.pull_request;
+          const { diff_url, patch_url,number } = pullRequestData.pull_request;
+          const {repository} = pullRequestData;
   
           // Fetch diff and patch data using utility functions
           const [diffText, patchText] = await Promise.all([
@@ -67,13 +71,16 @@ export const handleWebhook = async (req, res) => {
             fetchPatch(patch_url),
           ]);
 
-          console.log("Diff Text:", diffText);
-          console.log("Patch Text:", patchText);
+        //   console.log("Diff Text:", diffText);
+        //   console.log("Patch Text:", patchText);
   
           // Call the AI model to review the changes
           const aiReview = await reviewWithAI(diffText, patchText);
           console.log("AI Review:", aiReview);
   
+          await postComment(repository.owner.login, repository.name, number, aiReview,ACCESS_TOKEN_SECRET);
+
+
           // Respond with the AI review
           return res.status(200).json({
             message: "Pull request reviewed successfully",
@@ -103,5 +110,23 @@ export async function reviewWithAI(diffText, patchText) {
 
 
 
-
+  async function postComment(owner, repo, pull_number, comment, accessToken) {
+    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/issues/${pull_number}/comments`, {
+        method: "POST",
+        headers: {
+          Authorization: `token ${accessToken}`, // Use OAuth access token here
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          body: comment, // The AI review comment
+        }),
+      });
+     
+      const data = await response.json();  // Log the response from GitHub
+      console.log("GitHub Response:", data);  // Log the response
+      if (!response.ok) {
+        console.error("Failed to post comment:", data);
+        throw new Error(`Error posting comment: ${data.message}`);
+      }     
+  }
 
