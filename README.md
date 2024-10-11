@@ -68,17 +68,3 @@ Before setting up the project, ensure you have the following:
 
 The frontend will be running on `http://localhost:3000` and the backend on `http://localhost:3005`.
 
-## Usage
-
-### 1. GitHub OAuth Login
-- Navigate to `http://localhost:3000` and click the "Connect with GitHub" button.
-- This will redirect you to GitHub for authorization. Once authorized, the system will store the access token locally.
-
-### 2. Submitting Repository Info
-- After logging in, submit the **Owner/Username** and **Repository Name** for which you want to automate PR reviews.
-- This will set up a webhook on the specified repository to listen for PR events.
-
-### 3. Webhook & PR Review
-- When a pull request is opened or updated, the system will automatically trigger the webhook and review the PR.
-- AI will analyze the code and post comments on the pull request.
-
